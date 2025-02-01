@@ -1,0 +1,46 @@
+---
+- name: Bootstrap Ansible from scratch
+  hosts: all
+  become: true
+  vars:
+    new_user: vpn
+    ansible_ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+
+  tasks:
+    - name: Ensure sudo is installed
+      ansible.builtin.apt:
+        name: sudo
+        state: present
+
+    - name: Create ansible user
+      ansible.builtin.user:
+        name: "{{ new_user }}"
+        groups: sudo
+        append: true
+        shell: /bin/bash
+        password: "{{ 'password' | password_hash('sha512') }}"
+
+    - name: Add SSH key for ansible user
+      ansible.posix.authorized_key:
+        user: "{{ new_user }}"
+        state: present
+        key: "{{ ansible_ssh_public_key }}"
+
+    - name: Ensure sudoers.d directory exists
+      ansible.builtin.file:
+        path: /etc/sudoers.d
+        state: directory
+        mode: '0750'
+
+    - name: Allow user to run sudo without password
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/{{ new_user }}
+        content: "{{ new_user }} ALL=(ALL) NOPASSWD:ALL"
+        mode: '0440'
+        validate: 'visudo -cf %s'
+
+  handlers:
+    - name: Restart SSH
+      ansible.builtin.service:
+        name: sshd
+        state: restarted

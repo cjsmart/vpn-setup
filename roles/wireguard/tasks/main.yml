@@ -1,0 +1,26 @@
+---
+- name: Ensure curl is installed
+  ansible.builtin.apt:
+    name: curl
+    state: present
+
+- name: Download wireguard-install.sh
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/angristan/wireguard-install/master/wireguard-install.sh
+    dest: /home/{{ ansible_user }}/wireguard-install.sh
+    mode: '0755'
+
+
+- name: Run wireguard-install.sh
+  ansible.builtin.shell: |
+    /home/{{ ansible_user }}/wireguard-install.sh
+  args:
+    executable: /bin/bash
+  environment:
+    AUTO_INSTALL: "y"
+    APPROVE_INSTALL: "y"
+    APPROVE_IP: "y"
+    IPV6_SUPPORT: "n"
+    PORT_CHOICE: "1"
+    CLIENT: "client"
+  changed_when: false

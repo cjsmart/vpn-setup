@@ -1,0 +1,14 @@
+---
+- name: Setup vpn services and utilities on a new server
+  hosts: all
+  become: true
+  vars:
+    ansible_user: vpn
+
+  roles:
+    - role: openvpn
+    - role: ssh_hardening
+    # - role: wireguard
+    - role: fail2ban
+    # - role: pihole
+    # - role: x3-ui

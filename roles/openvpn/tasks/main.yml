@@ -1,0 +1,36 @@
+---
+- name: Ensure curl is installed
+  ansible.builtin.apt:
+    name: curl
+    state: present
+
+- name: Download openvpn-install.sh
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
+    dest: /home/{{ ansible_user }}/openvpn-install.sh
+    mode: '0755'
+
+- name: Check if OpenVPN is installed
+  ansible.builtin.stat:
+    path: /etc/openvpn/server.conf
+  register: openvpn_installed
+
+- name: Run openvpn-install.sh
+  ansible.builtin.shell: |
+    /home/{{ ansible_user }}/openvpn-install.sh
+  args:
+    executable: /bin/bash
+  become: true
+  environment:
+    AUTO_INSTALL: "y"
+    APPROVE_INSTALL: "y"
+    APPROVE_IP: "y"
+    IPV6_SUPPORT: "n"
+    PORT_CHOICE: "1"
+    PROTOCOL_CHOICE: "1"
+    DNS: "1"  # Используем Cloudflare DNS, можно изменить
+    COMPRESSION_ENABLED: "n"
+    CUSTOMIZE_ENC: "n"
+    CLIENT: "client"
+  changed_when: true
+  when: not openvpn_installed.stat.exists
