@@ -38,12 +38,14 @@
   args:
     executable: /bin/bash
   become: true
-  environment:
-    PIHOLE_INTERACTIVE: "false"
-    PIHOLE_QUICK: "true"
-    PIHOLE_SKIP_OS_CHECK: "true"
-    PIHOLE_WEB_INTERFACE: "true"
-    PIHOLE_DNS_1: "8.8.8.8"
-    PIHOLE_DNS_2: "8.8.4.4"
   changed_when: true
   when: not pihole_installed.stat.exists
+
+- name: Push Pi-hole DNS by default in OpenSSH
+  ansible.builtin.lineinfile:
+    path: /etc/openvpn/server.conf
+    regexp: '^push "dhcp-option DNS'
+    line: 'push "dhcp-option DNS 10.8.0.1"'
+    state: present
+  become: true
+  notify: Restart SSH
