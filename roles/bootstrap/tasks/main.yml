@@ -1,0 +1,55 @@
+---
+- name: Ensure sudo is installed
+  ansible.builtin.apt:
+    name: sudo
+    state: present
+
+- name: Create ansible user
+  ansible.builtin.user:
+    name: "{{ new_user }}"
+    groups: sudo
+    append: true
+    shell: /bin/bash
+    password: "{{ 'password' | password_hash('sha512') }}"
+
+- name: Ensure sudoers.d directory exists
+  ansible.builtin.file:
+    path: /etc/sudoers.d
+    state: directory
+    mode: '0750'
+
+- name: Allow user to run sudo without password
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/{{ new_user }}
+    content: "{{ new_user }} ALL=(ALL) NOPASSWD:ALL"
+    mode: '0440'
+    validate: 'visudo -cf %s'
+
+- name: Find all .pub files in ~/.ssh/ on the host machine
+  ansible.builtin.find:
+    paths: "{{ lookup('env', 'HOME') }}/.ssh/"
+    patterns: "*.pub"
+    recurse: false
+  register: pub_keys
+  delegate_to: 127.0.0.1
+
+- name: Ensure ~/.ssh/ directory exists on the remote machine
+  ansible.builtin.file:
+    path: /home/{{ new_user }}/.ssh/
+    state: directory
+    mode: '0700'
+
+- name: Ensure authorized_keys file exists on the remote machine
+  ansible.builtin.file:
+    path: /home/{{ new_user }}/.ssh/authorized_keys
+    state: touch
+    mode: '0600'
+
+- name: Add public keys to authorized_keys on the remote machine
+  ansible.posix.authorized_key:
+    user: "{{ new_user }}"
+    key: "{{ lookup('file', item.path) }}"
+    state: present
+  loop: "{{ pub_keys.files }}"
+  loop_control:
+    label: "{{ item.path }}"

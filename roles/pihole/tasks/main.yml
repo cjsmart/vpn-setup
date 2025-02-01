@@ -1,0 +1,49 @@
+---
+- name: Ensure curl is installed
+  ansible.builtin.apt:
+    name: curl
+    state: present
+
+- name: Check if Pi-hole is installed
+  ansible.builtin.stat:
+    path: /etc/pihole/pihole-FTL.conf
+  register: pihole_installed
+
+- name: Download Pi-hole installation script
+  ansible.builtin.get_url:
+    url: https://install.pi-hole.net
+    dest: /home/{{ ansible_user }}/install-pi-hole.sh
+    mode: '0755'
+  when: not pihole_installed.stat.exists
+
+- name: Creates /etc/pihole directory
+  ansible.builtin.file:
+    path: /etc/pihole
+    state: directory
+    mode: '0644'
+  when: not pihole_installed.stat.exists
+
+- name: Copy Pi-hole install configuration
+  ansible.builtin.copy:
+    src: files/setupVars.conf
+    dest: /etc/pihole/setupVars.conf
+    owner: root
+    group: root
+    mode: '0644'
+  when: not pihole_installed.stat.exists
+
+- name: Install Pi-hole (non-interactive)
+  ansible.builtin.shell: |
+    /home/{{ ansible_user }}/install-pi-hole.sh --unattended
+  args:
+    executable: /bin/bash
+  become: true
+  environment:
+    PIHOLE_INTERACTIVE: "false"
+    PIHOLE_QUICK: "true"
+    PIHOLE_SKIP_OS_CHECK: "true"
+    PIHOLE_WEB_INTERFACE: "true"
+    PIHOLE_DNS_1: "8.8.8.8"
+    PIHOLE_DNS_2: "8.8.4.4"
+  changed_when: true
+  when: not pihole_installed.stat.exists

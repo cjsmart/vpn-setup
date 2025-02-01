@@ -8,7 +8,6 @@
   roles:
     - role: openvpn
     - role: ssh_hardening
-    # - role: wireguard
+    - role: pihole
     - role: fail2ban
-    # - role: pihole
     # - role: x3-ui
