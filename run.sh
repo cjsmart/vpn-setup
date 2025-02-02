@@ -1,20 +1,20 @@
 #!/bin/bash
 set -euo pipefail
 
-# Функция для вывода usage
+# Print usage
 usage() {
   echo "Usage: $0 -u <username> -h <host>"
-  echo "  -u  Имя пользователя для подключения к удалённой машине"
-  echo "  -h  Адрес удалённой машины (IP или доменное имя)"
+  echo "  -u  Remote machine username"
+  echo "  -h  Remote machine IP address or hostname"
   exit 1
 }
 
-# Проверка количества аргументов
+# Check the number of arguments
 if [ $# -eq 0 ]; then
   usage
 fi
 
-# Парсинг аргументов командной строки
+# Parse command line arguments
 while getopts ":u:h:" opt; do
   case $opt in
     u) USERNAME="$OPTARG" ;;
@@ -23,32 +23,32 @@ while getopts ":u:h:" opt; do
   esac
 done
 
-# Проверка, что оба параметра указаны
+# Ensura the both parameters are set
 if [ -z "$USERNAME" ] || [ -z "$HOST" ]; then
-  echo "Ошибка: Необходимо указать имя пользователя и адрес удалённой машины."
+  echo "Error: username and remote machine address must be set."
   usage
 fi
 
-# Выполнение Ansible-плейбуков
-echo "Запуск bootstrap.yml с пользователем $USERNAME на хосте $HOST..."
+# Run Ansible-playbooks
+echo "Running bootstrap.yml as $USERNAME on $HOST..."
 ansible-playbook -i "$HOST," -u "$USERNAME" bootstrap.yml
 
 if [ $? -eq 0 ]; then
-  echo "bootstrap.yml выполнен успешно."
+  echo "bootstrap.yml completed successfully."
 else
-  echo "Ошибка при выполнении bootstrap.yml."
+  echo "Error while executing bootstrap.yml."
   exit 1
 fi
 
-echo "Запуск playbook.yml с пользователем $USERNAME на хосте $HOST..."
+echo "Running playbook.yml as $USERNAME on $HOST..."
 ansible-playbook -i "$HOST," playbook.yml
 
 if [ $? -eq 0 ]; then
-  echo "playbook.yml выполнен успешно."
+  echo "playbook.yml completed successfully."
 else
-  echo "Ошибка при выполнении playbook.yml."
+  echo "Error while executing playbook.yml."
   exit 1
 fi
 
-echo "Все плейбуки выполнены успешно."
+echo "All playbooks completed successfully."
 exit 0
