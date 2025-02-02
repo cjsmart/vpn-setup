@@ -1,34 +1,36 @@
 # vpn-setup
-ansible playbook для установки и настройки vpn и связанных сервисов на чистой виртуалке
+Ansible playbook for setting up and configuring VPN and related services on a clean virtual machine.
 
-## Запуск
-1. Убеждаемся, что на удалённой машине есть доступ через публичный ключ. Чаще всего на чистой машине есть пользователь `root` с нужным ключом в `/root/.ssh/authorized_keys`. 
-   Можно использовать и другого пользователя с sudo-правами, главное также чтобы у нас был доступ по публичному ключу, это требуется для запуска ansible-плейбуков.
-2. Выполняем первичную настройку, добавим пользователя `vpn`, под которым будем запускать основной плейбук (в примере мы используем для подключения пользователя `root`, но можно и другого, см п.1):
+## Usage
+1. Ensure that the remote machine has access via a public key. Typically, a clean machine has the `root` user with the necessary key in `/root/.ssh/authorized_keys`.
+You can also use another user with sudo privileges, as long as we have access via a public key, which is required to run Ansible playbooks.
+
+2. Perform the initial setup by adding a vpn user, under which we will run the main playbook (in the example, we use the `root` user for connection, but another user can be used, see step 1):
    ```bash
-   ansible-playbook --user root -i "<ip-адрес-машины>," bootstrap.yml
+   ansible-playbook --user root -i "<machine-ip-address>," bootstrap.yml
    ```
-   Запятая тут обязательна, чтобы ansible взял адрес из командной строки, а не из inventories
-3. Запускаем основной плейбук:
+   The comma here is mandatory so that Ansible takes the address from the command line and not from inventories.
+
+3. Run the main playbook:
    ```bash
-   ansible-playbook -i "<ip-адрес-машины>," playbook.yml
+   ansible-playbook -i "<machine-ip-address>," playbook.yml
    ```
 
-Оба плейбука можно выполнить вместе одним скриптом:
+Both playbooks can be executed together using a single script:
 ```bash
 chmod +x run.sh
-./run.sh -u <пользователь> -h <ip-адрес-машины>
+./run.sh -u <user> -h <machine-ip-address>
 ```
 
-## Что настраиваем
+## What We Configure
 bootstrap.yml:
-1. Добавляем нового пользователя `vpn` и дайм ему sudo-права
-2. Добавляем локальные публичные ключи из `~/.ssh/*.pub` в authorized_keys для пользователя `vpn`
+1. Add a new `vpn` user and grant them sudo privileges.
+2. Add local public keys from `~/.ssh/*.pub` to the `authorized_keys` file for the vpn user.
 
 playbook.yml:
-1. Ставим OpenVPN
-2. Ставим pi-hole
-3. Настраиваем OpenVPN на использование pi-hole в качестве DNS-сервера
-4. Запрещаем доступ к pihole (и DNS, и HTTP) извне OpenVPN-сети
-5. Ставим fail2ban и настраиваем на работу с ssh
-6. Настраиваем iptables на блокировку любых подключений, кроме ssh и OpenVPN
+1. Install OpenVPN.
+2. Install Pi-hole.
+3. Configure OpenVPN to use Pi-hole as the DNS server.
+4. Restrict access to Pi-hole (both DNS and HTTP) from outside the OpenVPN network.
+5. Install and configure fail2ban for SSH.
+6. Configure iptables to block all connections except SSH and OpenVPN.
