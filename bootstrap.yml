@@ -6,4 +6,4 @@
     new_user: vpn
 
   roles:
-    - bootstrap
+    - role: bootstrap

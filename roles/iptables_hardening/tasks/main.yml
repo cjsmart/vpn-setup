@@ -1,0 +1,71 @@
+---
+- name: Ensure iptables is installed
+  ansible.builtin.apt:
+    name: iptables
+    state: present
+
+- name: Flush existing iptables rules
+  ansible.builtin.iptables:
+    flush: true
+
+- name: Allow loopback traffic
+  ansible.builtin.iptables:
+    chain: INPUT
+    in_interface: lo
+    jump: ACCEPT
+
+- name: Allow established and related connections
+  ansible.builtin.iptables:
+    chain: INPUT
+    ctstate: ESTABLISHED,RELATED
+    jump: ACCEPT
+
+- name: Allow SSH (port 22)
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: 22
+    jump: ACCEPT
+
+- name: Allow OpenVPN (port 1194 by default)
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: udp
+    destination_port: 1194
+    jump: ACCEPT
+
+- name: Allow Pi-hole for OpenVPN interface only
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    in_interface: tun0
+    destination_port: 53
+    jump: ACCEPT
+
+- name: Set default policy to DROP for INPUT chain
+  ansible.builtin.iptables:
+    chain: INPUT
+    policy: DROP
+
+- name: Save iptables rules to a file
+  ansible.builtin.shell: iptables-save > /etc/iptables/rules.v4
+  args:
+    creates: /etc/iptables/rules.v4
+  become: true
+
+- name: Ensure iptables rules are loaded on boot
+  ansible.builtin.copy:
+    dest: /etc/network/if-pre-up.d/iptables
+    content: |
+      #!/bin/sh
+      /sbin/iptables-restore < /etc/iptables/rules.v4
+    mode: '0755'
+  become: true
+
+# - name: Check current iptables rules
+#   ansible.builtin.command: iptables -L -n -v
+#   register: iptables_output
+
+# - name: Display iptables rules
+#   ansible.builtin.debug:
+#     var: iptables_output.stdout
