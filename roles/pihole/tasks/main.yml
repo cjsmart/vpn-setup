@@ -55,4 +55,4 @@
     line: 'push "dhcp-option DNS 10.8.0.1"'
     state: present
   become: true
-  notify: Restart SSH
+  notify: Restart OpenVPN

@@ -13,3 +13,22 @@ ansible playbook для установки и настройки vpn и связ
    ```bash
    ansible-playbook -i <ip-адрес-машины> playbook.yml
    ```
+
+Оба плейбука можно выполнить вместе одним скриптом:
+```bash
+chmod +x run.sh
+./run.sh -u <пользователь> -h <ip-адрес-машины>
+```
+
+## Что настраиваем
+bootstrap.yml:
+1. Добавляем нового пользователя `vpn` и дайм ему sudo-права
+2. Добавляем локальные публичные ключи из `~/.ssh/*.pub` в authorized_keys для пользователя `vpn`
+
+playbook.yml:
+1. Ставим OpenVPN
+2. Ставим pi-hole
+3. Настраиваем OpenVPN на использование pi-hole в качестве DNS-сервера
+4. Запрещаем доступ к pihole (и DNS, и HTTP) извне OpenVPN-сети
+5. Ставим fail2ban и настраиваем на работу с ssh
+6. Настраиваем iptables на блокировку любых подключений, кроме ssh и OpenVPN

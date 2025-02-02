@@ -8,8 +8,6 @@
   roles:
     - role: openvpn
     - role: pihole
-    - role: pihole-iptables
-    # - role: x3-ui
     - role: fail2ban
-    - role: ssh_hardening
-    # - role: iptables_hardening
+    - role: ssh-hardening
+    - role: iptables-hardening
